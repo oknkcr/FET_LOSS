@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MOSFET LOSS Calculator</title>
+    <link rel="stylesheet" href="style.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+    <div class="container">
+        <div class="column-container">
+            <div class="left-column">
+                <h2>General Circuit Information</h2>
+                <div class="parameter-group">
+                    <label for="fet_min">I<sub>FET,min</sub>:</label>
+                    <input type="number" id="fet_min" value="6.0" step="0.1">
+                    <span class="unit">A</span>
+                </div>
+                <div class="parameter-group">
+                    <label for="fet_max">I<sub>FET,max</sub>:</label>
+                    <input type="number" id="fet_max" value="8.0" step="0.1">
+                    <span class="unit">A</span>
+                </div>
+                <div class="parameter-group">
+                    <label for="fet1_rms">I<sub>FET1,rms</sub>:</label>
+                    <input type="number" id="fet1_rms" value="5.5" step="0.1">
+                    <span class="unit">A</span>
+                </div>
+                <div class="parameter-group">
+                    <label for="fet2_rms">I<sub>FET2,rms</sub>:</label>
+                    <input type="number" id="fet2_rms" value="5.5" step="0.1">
+                    <span class="unit">A</span>
+                </div>
+                <div class="parameter-group">
+                    <label for="f_switch">f<sub>switch</sub>:</label>
+                    <input type="number" id="f_switch" value="300">
+                    <span class="unit">kHz</span>
+                </div>
+                <div class="parameter-group">
+                    <label for="v_gs">V<sub>GS</sub>:</label>
+                    <input type="number" id="v_gs" value="4.5" step="0.1">
+                    <span class="unit">V</span>
+                </div>
+                <div class="parameter-group">
+                    <label for="v_ds">V<sub>DS</sub>:</label>
+                    <input type="number" id="v_ds" value="7.5" step="0.1">
+                    <span class="unit">V</span>
+                </div>
+                
+                <div class="instructions">
+                    <ol>
+                        <li>Use the R<sub>DS(on)</sub> from the datasheet at V<sub>GS</sub> of the used controller.</li>
+                        <li>Obtain V<sub>GS(th)</sub>, Q<sub>gs</sub>, Q<sub>gd</sub>, C<sub>oss</sub>, V<sub>SD</sub> from the datasheet of the FET.</li>
+                        <li>Q<sub>g(th)</sub> (if not specified in the datasheet), Q<sub>g</sub> (depends on V<sub>GS</sub>) and V<sub>miller</sub> have to be obtained from the "Q<sub>g</sub> vs. V<sub>GS</sub>" graph of the FET's datasheet.</li>
+                        <li>t<sub>dead,on</sub> (Time delay between HDRV fall and LDRV rise) and t<sub>dead,off</sub> (Time delay between HDRV rise and LDRV fall) need to be obtained from the datasheet of the used controller.</li>
+                        <li>Adjust the total gate resistance with the slider to achieve the maximum driver current your controller supports.</li>
+                        <li>Activate the "Synchronous Rectifier" Radio Button to make calculations for a FET used as synchronous rectifier.</li>
+                    </ol>
+                </div>
+            </div>
+            
+            <div class="right-column">
+                <div class="fet-id">
+                    <label for="fet_id">FET1:</label>
+                    <input type="text" id="fet_id" value="CSD18510Q5B">
+                    <button id="save-btn">Save</button>
+                    <button id="load-btn">Load</button>
+                </div>
+                
+                <div class="fet-type">
+                    <div class="radio-group">
+                        <input type="radio" id="main_fet" name="fet_type" checked>
+                        <label for="main_fet">Main FET</label>
+                    </div>
+                    <div class="radio-group">
+                        <input type="radio" id="sync_rect" name="fet_type">
+                        <label for="sync_rect">Synchronous Rectifier</label>
+                    </div>
+                </div>
+                
+                <div class="parameter-row">
+                    <div class="parameter-label">R<sub>DS(on)</sub>:</div>
+                    <div class="parameter-input">
+                        <input type="number" id="r_ds_on" value="1.2" step="0.1">
+                        <span class="unit">mΩ</span>
+                    </div>
+                    <div class="parameter-label">Conductive Losses:</div>
+                    <div class="parameter-result" id="conductive_losses">36.30</div>
+                    <div class="parameter-unit">mW</div>
+                </div>
+                
+                <div class="parameter-row">
+                    <div class="parameter-label">Q<sub>gs</sub>:</div>
+                    <div class="parameter-input">
+                        <input type="number" id="q_gs" value="28.0" step="0.1">
+                        <span class="unit">nC</span>
+                    </div>
+                    <div class="parameter-label">Switching Losses:</div>
+                    <div class="parameter-result" id="switching_losses">0.24</div>
+                    <div class="parameter-unit">W</div>
+                </div>
+                
+                <div class="parameter-row">
+                    <div class="parameter-label">Q<sub>gd</sub>:</div>
+                    <div class="parameter-input">
+                        <input type="number" id="q_gd" value="21.0" step="0.1">
+                        <span class="unit">nC</span>
+                    </div>
+                    <div class="parameter-label">Body Diode Losses:</div>
+                    <div class="parameter-result" id="body_diode_losses">0.00</div>
+                    <div class="parameter-unit">mW</div>
+                </div>
+                
+                <div class="parameter-row">
+                    <div class="parameter-label">Q<sub>g(th)</sub>:</div>
+                    <div class="parameter-input">
+                        <input type="number" id="q_g_th" value="15.0" step="0.1">
+                        <span class="unit">nC</span>
+                    </div>
+                    <div class="parameter-label">C<sub>oss</sub> Losses:</div>
+                    <div class="parameter-result" id="coss_losses">9.11</div>
+                    <div class="parameter-unit">mW</div>
+                </div>
+                
+                <div class="parameter-row">
+                    <div class="parameter-label">Q<sub>g</sub>:</div>
+                    <div class="parameter-input">
+                        <input type="number" id="q_g" value="75.0" step="0.1">
+                        <span class="unit">nC</span>
+                    </div>
+                    <div class="parameter-label">Total Losses:</div>
+                    <div class="parameter-result" id="total_losses" style="color: red;">0.28</div>
+                    <div class="parameter-unit">W</div>
+                </div>
+                
+                <div class="parameter-row">
+                    <div class="parameter-label">C<sub>oss</sub>:</div>
+                    <div class="parameter-input">
+                        <input type="number" id="c_oss" value="1080">
+                        <span class="unit">pF</span>
+                    </div>
+                    <div class="parameter-label">Driver Losses:</div>
+                    <div class="parameter-result" id="driver_losses">0.10</div>
+                    <div class="parameter-unit">W</div>
+                </div>
+                
+                <div class="parameter-row">
+                    <div class="parameter-label">V<sub>GS(th)</sub>:</div>
+                    <div class="parameter-input">
+                        <input type="number" id="v_gs_th" value="2.3" step="0.1">
+                        <span class="unit">V</span>
+                    </div>
+                    <div class="parameter-label">Driver Current:</div>
+                    <div class="parameter-result" id="driver_current">1.95</div>
+                    <div class="parameter-unit">A</div>
+                </div>
+                
+                <div class="parameter-row">
+                    <div class="parameter-label">V<sub>miller</sub>:</div>
+                    <div class="parameter-input">
+                        <input type="number" id="v_miller" value="2.6" step="0.1">
+                        <span class="unit">V</span>
+                    </div>
+                    <div class="parameter-label">Rise time:</div>
+                    <div class="parameter-result" id="rise_time">17.39</div>
+                    <div class="parameter-unit">ns</div>
+                </div>
+                
+                <div class="parameter-row">
+                    <div class="parameter-label">V<sub>SD</sub>:</div>
+                    <div class="parameter-input disabled">
+                        <input type="number" id="v_sd" value="1.0" step="0.1" disabled>
+                        <span class="unit">V</span>
+                    </div>
+                    <div class="parameter-label">Fall time:</div>
+                    <div class="parameter-result" id="fall_time">13.38</div>
+                    <div class="parameter-unit">ns</div>
+                </div>
+                
+                <div class="parameter-row">
+                    <div class="parameter-label">t<sub>dead,on</sub>:</div>
+                    <div class="parameter-input disabled">
+                        <input type="number" id="t_dead_on" value="70" disabled>
+                        <span class="unit">ns</span>
+                    </div>
+                </div>
+                
+                <div class="parameter-row">
+                    <div class="parameter-label">t<sub>dead,off</sub>:</div>
+                    <div class="parameter-input disabled">
+                        <input type="number" id="t_dead_off" value="80" disabled>
+                        <span class="unit">ns</span>
+                    </div>
+                </div>
+                
+                <div class="parameter-row gate-resistance">
+                    <div class="parameter-label">R<sub>g,FET</sub> + R<sub>gate</sub> + R<sub>driver</sub>:</div>
+                    <div class="slider-container">
+                        <input type="range" id="r_total" min="1" max="20" value="1" step="0.1">
+                        <div class="slider-marks">
+                            <div>1.00</div>
+                            <div>5.00</div>
+                            <div>10.00</div>
+                            <div>15.00</div>
+                            <div>20.00</div>
+                        </div>
+                    </div>
+                    <div class="parameter-result" id="r_total_value">1.00</div>
+                    <div class="parameter-unit">Ω</div>
+                </div>
+                
+                <div class="chart-container">
+                    <h2 class="chart-title">Power Disribution</h2>
+                    <canvas id="lossChart"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+    <script src="script.js"></script>
+</body>
+</html> 
